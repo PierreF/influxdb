@@ -2,6 +2,8 @@
 
 ### Features
 
+- [#5744](https://github.com/influxdata/influxdb/issues/5744): Add integer literal support to the query language.
+
 ### Bugfixes
 
 ## v0.11.0 [unreleased]
