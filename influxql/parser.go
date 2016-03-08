@@ -131,6 +131,8 @@ func (p *Parser) parseShowStatement() (Statement, error) {
 		return nil, newParseError(tokstr(tok, lit), []string{"KEYS"}, pos)
 	case MEASUREMENTS:
 		return p.parseShowMeasurementsStatement()
+	case QUERIES:
+		return p.parseShowQueriesStatement()
 	case RETENTION:
 		tok, pos, lit := p.scanIgnoreWhitespace()
 		if tok == POLICIES {
@@ -171,6 +173,7 @@ func (p *Parser) parseShowStatement() (Statement, error) {
 		"FIELD",
 		"GRANTS",
 		"MEASUREMENTS",
+		"QUERIES",
 		"RETENTION",
 		"SERIES",
 		"SERVERS",
@@ -1074,6 +1077,12 @@ func (p *Parser) parseShowMeasurementsStatement() (*ShowMeasurementsStatement, e
 	}
 
 	return stmt, nil
+}
+
+// parseShowQueriesStatement parses a string and returns a ShowQueriesStatement.
+// This function assumes the "SHOW QUERIES" tokens have been consumed.
+func (p *Parser) parseShowQueriesStatement() (*ShowQueriesStatement, error) {
+	return &ShowQueriesStatement{}, nil
 }
 
 // parseShowRetentionPoliciesStatement parses a string and returns a ShowRetentionPoliciesStatement.
@@ -2563,6 +2572,40 @@ func FormatDuration(d time.Duration) string {
 	// we output with "u", which can be represented in 1 byte,
 	// instead of "µ", which requires 2 bytes.
 	return fmt.Sprintf("%du", d/time.Microsecond)
+}
+
+// FormatHumanReadableDuration prints a pretty string that combines the
+// components of the duration into a single string.
+func FormatHumanReadableDuration(d time.Duration) string {
+	if d == 0 {
+		return "0s"
+	}
+
+	s := ""
+	if v := d / (7 * 24 * time.Hour); v != 0 {
+		s += fmt.Sprintf("%dw", v)
+		d -= (7 * 24 * time.Hour) * v
+	}
+	if v := d / (24 * time.Hour); v != 0 {
+		s += fmt.Sprintf("%dd", v)
+		d -= (24 * time.Hour) * v
+	}
+	if v := d / time.Hour; v != 0 {
+		s += fmt.Sprintf("%dh", v)
+		d -= time.Hour * v
+	}
+	if v := d / time.Minute; v != 0 {
+		s += fmt.Sprintf("%dm", v)
+		d -= time.Minute * v
+	}
+	if v := d / time.Second; v != 0 {
+		s += fmt.Sprintf("%ds", v)
+		d -= time.Second * v
+	}
+	if s == "" && d != 0 {
+		s += fmt.Sprintf("%du", d)
+	}
+	return s
 }
 
 // parseTokens consumes an expected sequence of tokens.
