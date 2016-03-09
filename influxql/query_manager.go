@@ -9,6 +9,10 @@ import (
 	"github.com/influxdata/influxdb/models"
 )
 
+var (
+	ErrNoQueryManager = errors.New("no query manager available")
+)
+
 // QueryTaskInfo holds information about a currently running query.
 type QueryTaskInfo struct {
 	ID       uint64
@@ -60,7 +64,7 @@ func DefaultQueryManager() QueryManager {
 
 func ExecuteShowQueriesStatement(qm QueryManager, q *ShowQueriesStatement) (models.Rows, error) {
 	if qm == nil {
-		return nil, errors.New("no query manager available")
+		return nil, ErrNoQueryManager
 	}
 
 	queries := qm.ListQueries()
