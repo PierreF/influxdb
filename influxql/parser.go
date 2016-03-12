@@ -66,11 +66,11 @@ func (p *Parser) ParseQuery() (*Query, error) {
 	semi := true
 
 	for {
-		if tok, pos, lit := p.scanIgnoreWhitespace(); tok == EOF {
+		if tok, pos, lit := p.scan(); tok == EOF {
 			return &Query{Statements: statements}, nil
 		} else if tok == SEMICOLON {
 			semi = true
-		} else {
+		} else if tok != WS {
 			if !semi {
 				return nil, newParseError(tokstr(tok, lit), []string{";"}, pos)
 			}
@@ -81,6 +81,12 @@ func (p *Parser) ParseQuery() (*Query, error) {
 			}
 			statements = append(statements, s)
 			semi = false
+		}
+
+		// Check if the current token is whitespace with a newline in it.
+		if tok, _, lit := p.s.curr(); tok == WS && strings.Contains(lit, "\n") {
+			// Let a newline masquerade as a semicolon.
+			semi = true
 		}
 	}
 }

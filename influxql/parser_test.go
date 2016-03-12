@@ -58,6 +58,17 @@ func TestParser_ParseQuery_NoSemicolon(t *testing.T) {
 	}
 }
 
+func TestParser_ParseQuery_Newline(t *testing.T) {
+	input := `CREATE DATABASE foo
+CREATE DATABASE bar`
+	q, err := influxql.NewParser(strings.NewReader(input)).ParseQuery()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	} else if len(q.Statements) != 2 {
+		t.Fatalf("unexpected statement count: %d", len(q.Statements))
+	}
+}
+
 // Ensure the parser can parse strings into Statement ASTs.
 func TestParser_ParseStatement(t *testing.T) {
 	// For use in various tests.
