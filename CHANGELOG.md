@@ -8,6 +8,8 @@
 
 ## v0.11.0 [unreleased]
 
+- [#5152](https://github.com/influxdata/influxdb/issues/5152): Fix where filters when a tag and a filter are combined with OR.
+
 ### Features
 
 - [#5596](https://github.com/influxdata/influxdb/pull/5596): Build improvements for ARM architectures. Also removed `--goarm` and `--pkgarch` build flags.
