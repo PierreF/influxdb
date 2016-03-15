@@ -1006,14 +1006,19 @@ func TestEval(t *testing.T) {
 		{in: `4 < 6`, out: true},
 		{in: `4 <= 4`, out: true},
 		{in: `4 AND 5`, out: nil},
+		{in: `0 = 'test'`, out: false},
+		{in: `1.0 = 1`, out: true},
+		{in: `1.2 = 1`, out: false},
 
 		// Boolean literals.
 		{in: `true AND false`, out: false},
 		{in: `true OR false`, out: true},
+		{in: `false = 4`, out: false},
 
 		// String literals.
 		{in: `'foo' = 'bar'`, out: false},
 		{in: `'foo' = 'foo'`, out: true},
+		{in: `'' = 4`, out: false},
 
 		// Regex literals.
 		{in: `'foo' =~ /f.*/`, out: true},

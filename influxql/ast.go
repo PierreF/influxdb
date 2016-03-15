@@ -3594,20 +3594,70 @@ func evalBinaryExpr(expr *BinaryExpr, m map[string]interface{}) interface{} {
 	// Evaluate if both sides are simple types.
 	switch lhs := lhs.(type) {
 	case bool:
-		rhs, _ := rhs.(bool)
+		rhs, ok := rhs.(bool)
 		switch expr.Op {
 		case AND:
-			return lhs && rhs
+			return ok && (lhs && rhs)
 		case OR:
-			return lhs || rhs
+			return ok && (lhs || rhs)
 		case EQ:
-			return lhs == rhs
+			return ok && (lhs == rhs)
 		case NEQ:
-			return lhs != rhs
+			return ok && (lhs != rhs)
 		}
 	case float64:
-		switch rhs := rhs.(type) {
-		case float64:
+		// Try the rhs as a float64 or int64
+		rhsf, ok := rhs.(float64)
+		if !ok {
+			var rhsi int64
+			if rhsi, ok = rhs.(int64); ok {
+				rhsf = float64(rhsi)
+			}
+		}
+
+		rhs := rhsf
+		switch expr.Op {
+		case EQ:
+			return ok && (lhs == rhs)
+		case NEQ:
+			return ok && (lhs != rhs)
+		case LT:
+			return ok && (lhs < rhs)
+		case LTE:
+			return ok && (lhs <= rhs)
+		case GT:
+			return ok && (lhs > rhs)
+		case GTE:
+			return ok && (lhs >= rhs)
+		case ADD:
+			if !ok {
+				return nil
+			}
+			return lhs + rhs
+		case SUB:
+			if !ok {
+				return nil
+			}
+			return lhs - rhs
+		case MUL:
+			if !ok {
+				return nil
+			}
+			return lhs * rhs
+		case DIV:
+			if !ok {
+				return nil
+			} else if rhs == 0 {
+				return float64(0)
+			}
+			return lhs / rhs
+		}
+	case int64:
+		// Try as a float64 to see if a float cast is required.
+		rhsf, ok := rhs.(float64)
+		if ok {
+			lhs := float64(lhs)
+			rhs := rhsf
 			switch expr.Op {
 			case EQ:
 				return lhs == rhs
@@ -3633,86 +3683,43 @@ func evalBinaryExpr(expr *BinaryExpr, m map[string]interface{}) interface{} {
 				}
 				return lhs / rhs
 			}
-		case int64:
+		} else {
+			rhs, ok := rhs.(int64)
 			switch expr.Op {
 			case EQ:
-				return lhs == float64(rhs)
+				return ok && (lhs == rhs)
 			case NEQ:
-				return lhs != float64(rhs)
+				return ok && (lhs != rhs)
 			case LT:
-				return lhs < float64(rhs)
+				return ok && (lhs < rhs)
 			case LTE:
-				return lhs <= float64(rhs)
+				return ok && (lhs <= rhs)
 			case GT:
-				return lhs > float64(rhs)
+				return ok && (lhs > rhs)
 			case GTE:
-				return lhs >= float64(rhs)
+				return ok && (lhs >= rhs)
 			case ADD:
-				return lhs + float64(rhs)
-			case SUB:
-				return lhs - float64(rhs)
-			case MUL:
-				return lhs * float64(rhs)
-			case DIV:
-				if rhs == 0 {
-					return float64(0)
+				if !ok {
+					return nil
 				}
-				return lhs / float64(rhs)
-			}
-		}
-	case int64:
-		switch rhs := rhs.(type) {
-		case float64:
-			switch expr.Op {
-			case EQ:
-				return float64(lhs) == rhs
-			case NEQ:
-				return float64(lhs) != rhs
-			case LT:
-				return float64(lhs) < rhs
-			case LTE:
-				return float64(lhs) <= rhs
-			case GT:
-				return float64(lhs) > rhs
-			case GTE:
-				return float64(lhs) >= rhs
-			case ADD:
-				return float64(lhs) + rhs
-			case SUB:
-				return float64(lhs) - rhs
-			case MUL:
-				return float64(lhs) * rhs
-			case DIV:
-				if rhs == 0 {
-					return float64(0)
-				}
-				return float64(lhs) / rhs
-			}
-		case int64:
-			switch expr.Op {
-			case EQ:
-				return lhs == rhs
-			case NEQ:
-				return lhs != rhs
-			case LT:
-				return lhs < rhs
-			case LTE:
-				return lhs <= rhs
-			case GT:
-				return lhs > rhs
-			case GTE:
-				return lhs >= rhs
-			case ADD:
 				return lhs + rhs
 			case SUB:
+				if !ok {
+					return nil
+				}
 				return lhs - rhs
 			case MUL:
+				if !ok {
+					return nil
+				}
 				return lhs * rhs
 			case DIV:
-				if rhs == 0 {
+				if !ok {
+					return nil
+				} else if rhs == 0 {
 					return float64(0)
 				}
-				return float64(lhs) / float64(rhs)
+				return lhs / rhs
 			}
 		}
 	case string:
