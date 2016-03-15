@@ -128,6 +128,7 @@ def run_generate():
     if os.path.join(os.environ.get("GOPATH"), "bin") not in os.environ["PATH"].split(os.pathsep):
         orig_path = os.environ["PATH"].split(os.pathsep)
         os.environ["PATH"] = os.environ["PATH"].split(os.pathsep).append(os.path.join(os.environ.get("GOPATH"), "bin"))
+    run("rm -f ./services/admin/statik/statik.go")
     run("go generate ./services/admin")
     if orig_path is not None:
         os.environ["PATH"] = orig_path
