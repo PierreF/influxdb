@@ -349,7 +349,16 @@ func (l *queue) Current() ([]byte, error) {
 		return nil, ErrNotOpen
 	}
 
-	return l.head.current()
+	b, err := l.head.current()
+	if err == io.EOF {
+		l.mu.Lock()
+		defer l.mu.Unlock()
+		if err := l.trimHead(); err != nil {
+			return b, err
+		}
+		b, err = l.head.current()
+	}
+	return b, err
 }
 
 // Advance moves the head point to the next byte slice in the queue
